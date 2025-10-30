@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Document (DOM) - 2º DAW</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-bottom: 5px solid #fdbb2d;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: flex;
+            min-height: 600px;
+        }
+        
+        .slides-container {
+            flex: 3;
+            padding: 30px;
+            background-color: #f8f9fa;
+            overflow-y: auto;
+        }
+        
+        .demo-container {
+            flex: 2;
+            padding: 30px;
+            background-color: #e9ecef;
+            border-left: 3px dashed #4a6491;
+        }
+        
+        .slide {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #fdbb2d;
+        }
+        
+        h3 {
+            color: #4a6491;
+            margin: 15px 0 10px;
+        }
+        
+        p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        code {
+            background-color: #2c3e50;
+            color: #fdbb2d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .code-block {
+            background-color: #2c3e50;
+            color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            line-height: 1.4;
+        }
+        
+        .demo-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        input, button {
+            padding: 12px 15px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .output {
+            background-color: #2c3e50;
+            color: #fdbb2d;
+            padding: 15px;
+            border-radius: 6px;
+            min-height: 100px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 30px;
+            background-color: #2c3e50;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(to right, #4a6491, #2c3e50);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: linear-gradient(to right, #fdbb2d, #b21f1f);
+            transform: translateY(-2px);
+        }
+        
+        .nav-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .slide-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #bdc3c7;
+            cursor: pointer;
+        }
+        
+        .indicator.active {
+            background-color: #2c3e50;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .event-log {
+            background-color: #2c3e50;
+            color: #fdbb2d;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .event-item {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(253, 187, 45, 0.2);
+        }
+        
+        @media (max-width: 900px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .demo-container {
+                border-left: none;
+                border-top: 3px dashed #4a6491;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Object Document (DOM)</h1>
+            <p class="subtitle">2º Desarrollo de Aplicaciones Web - Manipulación del DOM y addEventListener()</p>
+        </header>
+        
+        <div class="content">
+            <div class="slides-container">
+                <!-- Diapositiva 1 -->
+                <div class="slide active" id="slide1">
+                    <h2>¿Qué es el DOM?</h2>
+                    <p>El <strong>Document Object Model (DOM)</strong> es una interfaz de programación para documentos HTML y XML. Representa la estructura del documento como un árbol de objetos, donde cada nodo es una parte del documento (elementos, atributos, texto, etc.).</p>
+                    
+                    <h3>Características principales:</h3>
+                    <ul>
+                        <li>Representa el documento como una estructura de árbol</li>
+                        <li>Define cómo acceder y manipular los elementos del documento</li>
+                        <li>Es independiente del lenguaje de programación, aunque comúnmente se usa con JavaScript</li>
+                        <li>Permite modificar contenido, estructura y estilo de forma dinámica</li>
+                    </ul>
+                    
+                    <div class="code-block">
+                        // El objeto global 'document' representa el DOM<br>
+                        console.log(document);<br>
+                        <br>
+                        // Podemos acceder a elementos específicos<br>
+                        const titulo = document.getElementById('miTitulo');<br>
+                        console.log(titulo.textContent);
+                    </div>
+                </div>
+                
+                <!-- Diapositiva 2 -->
+                <div class="slide" id="slide2">
+                    <h2>Carga del DOM</h2>
+                    <p>Es importante esperar a que el DOM esté completamente cargado antes de intentar manipularlo. De lo contrario, nuestros scripts podrían intentar acceder a elementos que aún no existen.</p>
+                    
+                    <h3>Evento DOMContentLoaded</h3>
+                    <p>Este evento se dispara cuando el documento HTML inicial ha sido completamente cargado y parseado, sin esperar a hojas de estilo, imágenes y subframes.</p>
+                    
+                    <div class="code-block">
+                        // Forma correcta: esperar a que el DOM esté listo<br>
+                        document.addEventListener('DOMContentLoaded', function() {<br>
+                        &nbsp;&nbsp;// Aquí podemos manipular el DOM con seguridad<br>
+                        &nbsp;&nbsp;console.log('El DOM está listo!');<br>
+                        &nbsp;&nbsp;mostrarContenidoInput();<br>
+                        });
+                    </div>
+                    
+                    <h3>Alternativas:</h3>
+                    <ul>
+                        <li><code>window.onload</code> - Se ejecuta cuando toda la página ha cargado (incluyendo imágenes)</li>
+                        <li>Colocar los scripts al final del body</li>
+                        <li>Usar el atributo <code>defer</code> en la etiqueta script</li>
+                    </ul>
+                </div>
+                
+                <!-- Diapositiva 3 -->
+                <div class="slide" id="slide3">
+                    <h2>Selección de Elementos</h2>
+                    <p>JavaScript proporciona varios métodos para seleccionar elementos del DOM:</p>
+                    
+                    <h3>Métodos principales:</h3>
+                    <ul>
+                        <li><code>document.getElementById(id)</code> - Selecciona un elemento por su ID</li>
+                        <li><code>document.querySelector(selector)</code> - Selecciona el primer elemento que coincida con el selector CSS</li>
+                        <li><code>document.querySelectorAll(selector)</code> - Selecciona todos los elementos que coincidan con el selector CSS</li>
+                        <li><code>document.getElementsByClassName(clase)</code> - Selecciona elementos por clase</li>
+                        <li><code>document.getElementsByTagName(etiqueta)</code> - Selecciona elementos por nombre de etiqueta</li>
+                    </ul>
+                    
+                    <div class="code-block">
+                        // Diferentes formas de seleccionar elementos<br>
+                        const elemento1 = document.getElementById('miId');<br>
+                        const elemento2 = document.querySelector('.miClase');<br>
+                        const elementos = document.querySelectorAll('p');<br>
+                        <br>
+                        // Podemos encadenar selectores<br>
+                        const inputEspecial = document.querySelector('form input[type="text"]');
+                    </div>
+                </div>
+                
+                <!-- Diapositiva 4 -->
+                <div class="slide" id="slide4">
+                    <h2>Manipulación de Contenido</h2>
+                    <p>Una vez seleccionados los elementos, podemos modificar su contenido y atributos:</p>
+                    
+                    <h3>Propiedades útiles:</h3>
+                    <ul>
+                        <li><code>textContent</code> - Obtiene o establece el contenido de texto</li>
+                        <li><code>innerHTML</code> - Obtiene o establece el contenido HTML</li>
+                        <li><code>value</code> - Obtiene o establece el valor de elementos de formulario</li>
+                        <li><code>setAttribute(nombre, valor)</code> - Establece un atributo</li>
+                        <li><code>getAttribute(nombre)</code> - Obtiene el valor de un atributo</li>
+                    </ul>
+                    
+                    <div class="code-block">
+                        // Modificar contenido de texto<br>
+                        elemento.textContent = 'Nuevo texto';<br>
+                        <br>
+                        // Modificar contenido HTML (cuidado con seguridad)<br>
+                        elemento.innerHTML = '&lt;strong&gt;Texto en negrita&lt;/strong&gt;';<br>
+                        <br>
+                        // Obtener valor de un input<br>
+                        const valorInput = document.getElementById('miInput').value;<br>
+                        <br>
+                        // Cambiar atributos<br>
+                        imagen.setAttribute('src', 'nueva-imagen.jpg');
+                    </div>
+                </div>
+                
+                <!-- Diapositiva 5 -->
+                <div class="slide" id="slide5">
+                    <h2>addEventListener()</h2>
+                    <p>El método <code>addEventListener()</code> permite registrar un manejador de eventos para un elemento específico. Es la forma moderna y recomendada de manejar eventos en JavaScript.</p>
+                    
+                    <h3>Sintaxis:</h3>
+                    <div class="code-block">
+                        elemento.addEventListener(tipo, manejador, opciones);
+                    </div>
+                    
+                    <h3>Ventajas:</h3>
+                    <ul>
+                        <li>Permite múltiples manejadores para el mismo evento</li>
+                        <li>Ofrece más control sobre la fase de propagación (captura/burbuja)</li>
+                        <li>Mejor separación entre estructura (HTML) y comportamiento (JavaScript)</li>
+                        <li>Más fácil de mantener y depurar</li>
+                    </ul>
+                    
+                    <div class="code-block">
+                        // Ejemplo básico<br>
+                        boton.addEventListener('click', function() {<br>
+                        &nbsp;&nbsp;alert('Botón clickeado!');<br>
+                        });<br>
+                        <br>
+                        // Con función nombrada (mejor para remover eventos)<br>
+                        function manejarClick() {<br>
+                        &nbsp;&nbsp;console.log('Click manejado');<br>
+                        }<br>
+                        boton.addEventListener('click', manejarClick);
+                    </div>
+                </div>
+                
+                <!-- Diapositiva 6 -->
+                <div class="slide" id="slide6">
+                    <h2>Tipos de Eventos Comunes</h2>
+                    <p>Existen muchos tipos de eventos que podemos escuchar. Estos son algunos de los más utilizados:</p>
+                    
+                    <h3>Eventos de ratón:</h3>
+                    <ul>
+                        <li><code>click</code> - Clic en un elemento</li>
+                        <li><code>dblclick</code> - Doble clic</li>
+                        <li><code>mouseover</code> - Ratón sobre un elemento</li>
+                        <li><code>mouseout</code> - Ratón sale de un elemento</li>
+                    </ul>
+                    
+                    <h3>Eventos de teclado:</h3>
+                    <ul>
+                        <li><code>keydown</code> - Tecla presionada</li>
+                        <li><code>keyup</code> - Tecla liberada</li>
+                        <li><code>keypress</code> - Tecla presionada y liberada</li>
+                    </ul>
+                    
+                    <h3>Eventos de formulario:</h3>
+                    <ul>
+                        <li><code>submit</code> - Formulario enviado</li>
+                        <li><code>change</code> - Valor de elemento cambiado</li>
+                        <li><code>input</code> - Entrada de usuario en elemento de formulario</li>
+                        <li><code>focus</code> - Elemento recibe foco</li>
+                        <li><code>blur</code> - Elemento pierde foco</li>
+                    </ul>
+                </div>
+                
+                <!-- Diapositiva 7 -->
+                <div class="slide" id="slide7">
+                    <h2>Objeto Event</h2>
+                    <p>Cuando se produce un evento, el navegador crea un objeto <code>Event</code> que contiene información sobre el mismo. Este objeto se pasa automáticamente a la función manejadora.</p>
+                    
+                    <h3>Propiedades útiles del objeto Event:</h3>
+                    <ul>
+                        <li><code>target</code> - Elemento que desencadenó el evento</li>
+                        <li><code>currentTarget</code> - Elemento que tiene el manejador del evento</li>
+                        <li><code>type</code> - Tipo de evento ('click', 'keydown', etc.)</li>
+                        <li><code>key</code> - Tecla presionada (para eventos de teclado)</li>
+                        <li><code>preventDefault()</code> - Cancela el comportamiento por defecto</li>
+                        <li><code>stopPropagation()</code> - Detiene la propagación del evento</li>
+                    </ul>
+                    
+                    <div class="code-block">
+                        // Usando el objeto event<br>
+                        enlace.addEventListener('click', function(evento) {<br>
+                        &nbsp;&nbsp;// Prevenir que el enlace navegue<br>
+                        &nbsp;&nbsp;evento.preventDefault();<br>
+                        &nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;// Saber qué elemento fue clickeado<br>
+                        &nbsp;&nbsp;console.log('Elemento clickeado:', evento.target);<br>
+                        &nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;// Saber qué tecla se presionó (si es evento de teclado)<br>
+                        &nbsp;&nbsp;console.log('Tecla:', evento.key);<br>
+                        });
+                    </div>
+                </div>
+                
+                <!-- Diapositiva 8 -->
+                <div class="slide" id="slide8">
+                    <h2>Ejemplo Completo: Demo Interactiva</h2>
+                    <p>En la siguiente diapositiva veremos una demostración práctica que combina todos los conceptos explicados:</p>
+                    
+                    <h3>Lo que hace nuestra demo:</h3>
+                    <ol>
+                        <li>Espera a que el DOM esté completamente cargado</li>
+                        <li>Muestra automáticamente el contenido de un input al cargar</li>
+                        <li>Permite actualizar el contenido mostrado</li>
+                        <li>Registra eventos de diferentes tipos</li>
+                        <li>Muestra información sobre los eventos en tiempo real</li>
+                    </ol>
+                    
+                    <h3>Conceptos aplicados:</h3>
+                    <ul>
+                        <li><code>DOMContentLoaded</code></li>
+                        <li>Selección de elementos con <code>querySelector</code></li>
+                        <li>Manipulación de contenido con <code>textContent</code> e <code>innerHTML</code></li>
+                        <li>Uso de <code>addEventListener</code> para múltiples eventos</li>
+                        <li>Manejo del objeto <code>Event</code></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="demo-container">
+                <h2>Demo: Manipulación del DOM</h2>
+                
+                <div class="demo-box">
+                    <h3>Mostrar contenido del input</h3>
+                    <p>Al cargar la página, se mostrará automáticamente el contenido del siguiente input:</p>
+                    
+                    <input type="text" id="demoInput" placeholder="Escribe algo aquí...">
+                    <button id="updateBtn">Actualizar Contenido</button>
+                    
+                    <div class="output" id="contentOutput">
+                        El contenido aparecerá aquí...
+                    </div>
+                </div>
+                
+                <div class="demo-box">
+                    <h3>Registro de Eventos</h3>
+                    <p>Interactúa con los siguientes elementos para ver los eventos registrados:</p>
+                    
+                    <button id="clickBtn">Haz Click Aquí</button>
+                    <input type="text" id="keyInput" placeholder="Escribe para ver eventos de teclado">
+                    <div id="hoverArea" style="padding: 15px; background-color: #4a6491; color: white; text-align: center; border-radius: 6px; cursor: pointer;">
+                        Pasa el ratón por aquí
+                    </div>
+                    
+                    <div class="event-log" id="eventLog">
+                        Los eventos aparecerán aquí...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" disabled>Anterior</button>
+            
+            <div class="slide-indicators">
+                <div class="indicator active" data-slide="1"></div>
+                <div class="indicator" data-slide="2"></div>
+                <div class="indicator" data-slide="3"></div>
+                <div class="indicator" data-slide="4"></div>
+                <div class="indicator" data-slide="5"></div>
+                <div class="indicator" data-slide="6"></div>
+                <div class="indicator" data-slide="7"></div>
+                <div class="indicator" data-slide="8"></div>
+            </div>
+            
+            <button class="nav-btn" id="nextBtn">Siguiente</button>
+        </div>
+    </div>
+
+    <script>
+        // Esperar a que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', function() {
+            // ========== CONFIGURACIÓN DE LA PRESENTACIÓN ==========
+            const slides = document.querySelectorAll('.slide');
+            const indicators = document.querySelectorAll('.indicator');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            let currentSlide = 0;
+            
+            // Función para mostrar una diapositiva específica
+            function showSlide(index) {
+                // Ocultar todas las diapositivas
+                slides.forEach(slide => slide.classList.remove('active'));
+                indicators.forEach(indicator => indicator.classList.remove('active'));
+                
+                // Mostrar la diapositiva actual
+                slides[index].classList.add('active');
+                indicators[index].classList.add('active');
+                
+                // Actualizar estado de los botones
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === slides.length - 1;
+                
+                currentSlide = index;
+            }
+            
+            // Event listeners para navegación
+            prevBtn.addEventListener('click', () => {
+                if (currentSlide > 0) {
+                    showSlide(currentSlide - 1);
+                }
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                if (currentSlide < slides.length - 1) {
+                    showSlide(currentSlide + 1);
+                }
+            });
+            
+            // Event listeners para indicadores
+            indicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => {
+                    showSlide(index);
+                });
+            });
+            
+            // ========== DEMO: MANIPULACIÓN DEL DOM ==========
+            const demoInput = document.getElementById('demoInput');
+            const updateBtn = document.getElementById('updateBtn');
+            const contentOutput = document.getElementById('contentOutput');
+            const eventLog = document.getElementById('eventLog');
+            
+            // Función para mostrar el contenido del input
+            function mostrarContenidoInput() {
+                const contenido = demoInput.value || '(vacío)';
+                contentOutput.textContent = `Contenido del input: "${contenido}"`;
+            }
+            
+            // Mostrar contenido al cargar la página
+            mostrarContenidoInput();
+            
+            // Actualizar contenido cuando se hace clic en el botón
+            updateBtn.addEventListener('click', mostrarContenidoInput);
+            
+            // ========== DEMO: REGISTRO DE EVENTOS ==========
+            const clickBtn = document.getElementById('clickBtn');
+            const keyInput = document.getElementById('keyInput');
+            const hoverArea = document.getElementById('hoverArea');
+            
+            // Función para registrar eventos en el log
+            function logEvent(event) {
+                const timestamp = new Date().toLocaleTimeString();
+                const eventType = event.type;
+                let eventDetails = '';
+                
+                // Información específica según el tipo de evento
+                if (event.type === 'keydown' || event.type === 'keyup') {
+                    eventDetails = ` - Tecla: "${event.key}"`;
+                } else if (event.type === 'click') {
+                    eventDetails = ` - Elemento: ${event.target.id || event.target.tagName}`;
+                } else if (event.type.startsWith('mouse')) {
+                    eventDetails = ` - Coordenadas: (${event.clientX}, ${event.clientY})`;
+                }
+                
+                const logEntry = document.createElement('div');
+                logEntry.className = 'event-item';
+                logEntry.textContent = `[${timestamp}] ${eventType}${eventDetails}`;
+                
+                eventLog.prepend(logEntry);
+                
+                // Limitar el número de entradas en el log
+                if (eventLog.children.length > 10) {
+                    eventLog.removeChild(eventLog.lastChild);
+                }
+            }
+            
+            // Registrar eventos para el botón de clic
+            clickBtn.addEventListener('click', logEvent);
+            
+            // Registrar eventos para el área de hover
+            hoverArea.addEventListener('mouseover', logEvent);
+            hoverArea.addEventListener('mouseout', logEvent);
+            hoverArea.addEventListener('mousemove', logEvent);
+            
+            // Registrar eventos para el input de teclado
+            keyInput.addEventListener('keydown', logEvent);
+            keyInput.addEventListener('keyup', logEvent);
+            keyInput.addEventListener('focus', logEvent);
+            keyInput.addEventListener('blur', logEvent);
+            
+            // Evento especial: cambiar color al hacer clic en el área de hover
+            hoverArea.addEventListener('click', function() {
+                const colors = ['#4a6491', '#b21f1f', '#fdbb2d', '#2c3e50', '#27ae60'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                this.style.backgroundColor = randomColor;
+            });
+        });
+    </script>
+</body>
+</html>

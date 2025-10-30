@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manipulación del DOM - 2º DAW</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --success: #27ae60;
+            --warning: #f39c12;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, var(--primary), var(--dark));
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-bottom: 5px solid var(--accent);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: flex;
+            min-height: 600px;
+        }
+        
+        .dom-container {
+            flex: 1;
+            padding: 20px;
+            background-color: var(--light);
+            border-right: 3px dashed var(--secondary);
+            overflow-y: auto;
+        }
+        
+        .controls-container {
+            flex: 1;
+            padding: 20px;
+            background-color: white;
+            overflow-y: auto;
+        }
+        
+        h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent);
+        }
+        
+        h3 {
+            color: var(--dark);
+            margin: 15px 0 10px;
+        }
+        
+        .dom-tree {
+            background-color: white;
+            border: 2px solid var(--secondary);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            min-height: 300px;
+        }
+        
+        .element {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .element.highlight {
+            background-color: rgba(52, 152, 219, 0.2);
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .element.modified {
+            background-color: rgba(231, 76, 60, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .element.new {
+            background-color: rgba(39, 174, 96, 0.1);
+            border-left: 4px solid var(--success);
+            animation: pulse 1s;
+        }
+        
+        .tag {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .attribute {
+            color: var(--accent);
+        }
+        
+        .value {
+            color: var(--success);
+        }
+        
+        .content-text {
+            color: var(--dark);
+        }
+        
+        .control-group {
+            background-color: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .btn {
+            background: linear-gradient(to right, var(--primary), var(--dark));
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-success {
+            background: linear-gradient(to right, var(--success), #2ecc71);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(to right, var(--warning), #f1c40f);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(to right, var(--accent), #c0392b);
+        }
+        
+        input, select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .code-block {
+            background-color: var(--dark);
+            color: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+        
+        .log {
+            background-color: var(--dark);
+            color: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .log-item {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(236, 240, 241, 0.2);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        @media (max-width: 900px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .dom-container {
+                border-right: none;
+                border-bottom: 3px dashed var(--secondary);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Manipulación del DOM con JavaScript</h1>
+            <p class="subtitle">2º Desarrollo de Aplicaciones Web - Object Document en acción</p>
+        </header>
+        
+        <div class="content">
+            <div class="dom-container">
+                <h2>Árbol DOM Actual</h2>
+                <div class="dom-tree" id="domTree">
+                    <!-- Este contenido será generado dinámicamente -->
+                    <div class="element">
+                        <span class="tag">&lt;div id="contenedorPrincipal"&gt;</span>
+                    </div>
+                    <div class="element" style="margin-left: 20px;">
+                        <span class="tag">&lt;h1 id="titulo"&gt;</span>
+                        <span class="content-text">Título Original de la Página</span>
+                        <span class="tag">&lt;/h1&gt;</span>
+                    </div>
+                    <div class="element" style="margin-left: 20px;">
+                        <span class="tag">&lt;p id="descripcion" class="texto"&gt;</span>
+                        <span class="content-text">Esta es una descripción de ejemplo que puede ser modificada.</span>
+                        <span class="tag">&lt;/p&gt;</span>
+                    </div>
+                    <div class="element" style="margin-left: 20px;">
+                        <span class="tag">&lt;ul id="listaElementos"&gt;</span>
+                    </div>
+                    <div class="element" style="margin-left: 40px;">
+                        <span class="tag">&lt;li&gt;</span>
+                        <span class="content-text">Elemento de lista 1</span>
+                        <span class="tag">&lt;/li&gt;</span>
+                    </div>
+                    <div class="element" style="margin-left: 40px;">
+                        <span class="tag">&lt;li&gt;</span>
+                        <span class="content-text">Elemento de lista 2</span>
+                        <span class="tag">&lt;/li&gt;</span>
+                    </div>
+                    <div class="element" style="margin-left: 40px;">
+                        <span class="tag">&lt;li&gt;</span>
+                        <span class="content-text">Elemento de lista 3</span>
+                        <span class="tag">&lt;/li&gt;</span>
+                    </div>
+                    <div class="element" style="margin-left: 20px;">
+                        <span class="tag">&lt;/ul&gt;</span>
+                    </div>
+                    <div class="element" style="margin-left: 20px;">
+                        <span class="tag">&lt;div id="areaDinamica"&gt;</span>
+                        <span class="content-text">Este es un área donde se pueden agregar elementos dinámicamente.</span>
+                        <span class="tag">&lt;/div&gt;</span>
+                    </div>
+                    <div class="element">
+                        <span class="tag">&lt;/div&gt;</span>
+                    </div>
+                </div>
+                
+                <h3>Vista Previa</h3>
+                <div id="vistaPrevia" style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #3498db;">
+                    <div id="contenedorPrincipal">
+                        <h1 id="titulo">Título Original de la Página</h1>
+                        <p id="descripcion" class="texto">Esta es una descripción de ejemplo que puede ser modificada.</p>
+                        <ul id="listaElementos">
+                            <li>Elemento de lista 1</li>
+                            <li>Elemento de lista 2</li>
+                            <li>Elemento de lista 3</li>
+                        </ul>
+                        <div id="areaDinamica">
+                            Este es un área donde se pueden agregar elementos dinámicamente.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls-container">
+                <h2>Controles de Manipulación DOM</h2>
+                
+                <div class="control-group">
+                    <h3>1. Modificar Contenido</h3>
+                    <input type="text" id="nuevoTitulo" placeholder="Nuevo texto para el título">
+                    <button class="btn" onclick="cambiarTitulo()">Cambiar Título</button>
+                    
+                    <input type="text" id="nuevaDescripcion" placeholder="Nuevo texto para la descripción">
+                    <button class="btn" onclick="cambiarDescripcion()">Cambiar Descripción</button>
+                </div>
+                
+                <div class="control-group">
+                    <h3>2. Manipular Atributos</h3>
+                    <input type="text" id="nuevoId" placeholder="Nuevo ID para el título">
+                    <button class="btn" onclick="cambiarIdTitulo()">Cambiar ID del Título</button>
+                    
+                    <input type="text" id="nuevaClase" placeholder="Nueva clase para la descripción">
+                    <button class="btn" onclick="cambiarClaseDescripcion()">Cambiar Clase</button>
+                    
+                    <button class="btn btn-warning" onclick="toggleVisibilidadDescripcion()">Toggle Visibilidad Descripción</button>
+                </div>
+                
+                <div class="control-group">
+                    <h3>3. Manipular Estilos</h3>
+                    <select id="colorTitulo">
+                        <option value="#2c3e50">Color Original</option>
+                        <option value="#e74c3c">Rojo</option>
+                        <option value="#3498db">Azul</option>
+                        <option value="#27ae60">Verde</option>
+                        <option value="#f39c12">Naranja</option>
+                    </select>
+                    <button class="btn" onclick="cambiarColorTitulo()">Cambiar Color Título</button>
+                    
+                    <select id="tamanioFuente">
+                        <option value="16px">Tamaño Normal</option>
+                        <option value="20px">Grande</option>
+                        <option value="24px">Más Grande</option>
+                        <option value="12px">Pequeño</option>
+                    </select>
+                    <button class="btn" onclick="cambiarTamanioFuente()">Cambiar Tamaño Fuente</button>
+                </div>
+                
+                <div class="control-group">
+                    <h3>4. Manipular Elementos de Lista</h3>
+                    <input type="text" id="nuevoElementoLista" placeholder="Texto del nuevo elemento de lista">
+                    <button class="btn btn-success" onclick="agregarElementoLista()">Agregar a la Lista</button>
+                    <button class="btn btn-warning" onclick="modificarUltimoElemento()">Modificar Último Elemento</button>
+                    <button class="btn btn-danger" onclick="eliminarUltimoElemento()">Eliminar Último Elemento</button>
+                </div>
+                
+                <div class="control-group">
+                    <h3>5. Crear y Eliminar Elementos</h3>
+                    <input type="text" id="textoNuevoParrafo" placeholder="Texto del nuevo párrafo">
+                    <button class="btn btn-success" onclick="crearNuevoParrafo()">Crear Nuevo Párrafo</button>
+                    <button class="btn btn-danger" onclick="eliminarUltimoParrafo()">Eliminar Último Párrafo</button>
+                    
+                    <button class="btn" onclick="limpiarAreaDinamica()">Limpiar Área Dinámica</button>
+                </div>
+                
+                <div class="control-group">
+                    <h3>6. Navegación y Búsqueda</h3>
+                    <button class="btn" onclick="mostrarHijosContenedor()">Mostrar Hijos del Contenedor</button>
+                    <button class="btn" onclick="mostrarElementosPorClase()">Mostrar Elementos con Clase "texto"</button>
+                    <button class="btn" onclick="contarElementosLista()">Contar Elementos de Lista</button>
+                </div>
+                
+                <h3>Log de Operaciones</h3>
+                <div class="log" id="logOperaciones">
+                    <!-- Aquí se mostrarán las operaciones realizadas -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Esperar a que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', function() {
+            logOperacion('DOM cargado completamente. Listo para manipulación.');
+            
+            // Resaltar elementos en el árbol DOM al hacer hover en la vista previa
+            const elementosVistaPrevia = document.querySelectorAll('#vistaPrevia *');
+            elementosVistaPrevia.forEach(elemento => {
+                elemento.addEventListener('mouseover', function() {
+                    const id = this.id;
+                    if (id) {
+                        resaltarElementoEnArbol(id);
+                    }
+                });
+                
+                elemento.addEventListener('mouseout', function() {
+                    quitarResaltadoEnArbol();
+                });
+            });
+        });
+        
+        // ========== FUNCIONES DE MANIPULACIÓN DEL DOM ==========
+        
+        // 1. Modificar contenido de elementos
+        function cambiarTitulo() {
+            const nuevoTitulo = document.getElementById('nuevoTitulo').value;
+            if (nuevoTitulo) {
+                const titulo = document.getElementById('titulo');
+                titulo.textContent = nuevoTitulo;
+                actualizarArbolDOM();
+                logOperacion(`Título cambiado a: "${nuevoTitulo}"`);
+                resaltarElementoModificado('titulo');
+            }
+        }
+        
+        function cambiarDescripcion() {
+            const nuevaDescripcion = document.getElementById('nuevaDescripcion').value;
+            if (nuevaDescripcion) {
+                const descripcion = document.getElementById('descripcion');
+                descripcion.textContent = nuevaDescripcion;
+                actualizarArbolDOM();
+                logOperacion(`Descripción cambiada a: "${nuevaDescripcion}"`);
+                resaltarElementoModificado('descripcion');
+            }
+        }
+        
+        // 2. Manipular atributos
+        function cambiarIdTitulo() {
+            const nuevoId = document.getElementById('nuevoId').value;
+            if (nuevoId) {
+                const titulo = document.getElementById('titulo');
+                const idAnterior = titulo.id;
+                titulo.id = nuevoId;
+                actualizarArbolDOM();
+                logOperacion(`ID del título cambiado de "${idAnterior}" a "${nuevoId}"`);
+                resaltarElementoModificado(nuevoId);
+            }
+        }
+        
+        function cambiarClaseDescripcion() {
+            const nuevaClase = document.getElementById('nuevaClase').value;
+            if (nuevaClase) {
+                const descripcion = document.getElementById('descripcion');
+                descripcion.className = nuevaClase;
+                actualizarArbolDOM();
+                logOperacion(`Clase de la descripción cambiada a: "${nuevaClase}"`);
+                resaltarElementoModificado('descripcion');
+            }
+        }
+        
+        function toggleVisibilidadDescripcion() {
+            const descripcion = document.getElementById('descripcion');
+            if (descripcion.style.display === 'none') {
+                descripcion.style.display = 'block';
+                logOperacion('Descripción mostrada');
+            } else {
+                descripcion.style.display = 'none';
+                logOperacion('Descripción ocultada');
+            }
+            resaltarElementoModificado('descripcion');
+        }
+        
+        // 3. Manipular estilos
+        function cambiarColorTitulo() {
+            const color = document.getElementById('colorTitulo').value;
+            const titulo = document.getElementById('titulo');
+            titulo.style.color = color;
+            logOperacion(`Color del título cambiado a: ${color}`);
+            resaltarElementoModificado('titulo');
+        }
+        
+        function cambiarTamanioFuente() {
+            const tamanio = document.getElementById('tamanioFuente').value;
+            const descripcion = document.getElementById('descripcion');
+            descripcion.style.fontSize = tamanio;
+            logOperacion(`Tamaño de fuente de la descripción cambiado a: ${tamanio}`);
+            resaltarElementoModificado('descripcion');
+        }
+        
+        // 4. Manipular elementos de lista
+        function agregarElementoLista() {
+            const texto = document.getElementById('nuevoElementoLista').value;
+            if (texto) {
+                const lista = document.getElementById('listaElementos');
+                const nuevoElemento = document.createElement('li');
+                nuevoElemento.textContent = texto;
+                lista.appendChild(nuevoElemento);
+                actualizarArbolDOM();
+                logOperacion(`Elemento agregado a la lista: "${texto}"`);
+                resaltarElementoNuevo(nuevoElemento);
+            }
+        }
+        
+        function modificarUltimoElemento() {
+            const lista = document.getElementById('listaElementos');
+            const elementos = lista.getElementsByTagName('li');
+            if (elementos.length > 0) {
+                const ultimoElemento = elementos[elementos.length - 1];
+                const nuevoTexto = prompt('Nuevo texto para el último elemento:', ultimoElemento.textContent);
+                if (nuevoTexto !== null) {
+                    ultimoElemento.textContent = nuevoTexto;
+                    actualizarArbolDOM();
+                    logOperacion(`Último elemento de lista modificado: "${nuevoTexto}"`);
+                    resaltarElementoModificadoPorElemento(ultimoElemento);
+                }
+            } else {
+                logOperacion('No hay elementos en la lista para modificar');
+            }
+        }
+        
+        function eliminarUltimoElemento() {
+            const lista = document.getElementById('listaElementos');
+            const elementos = lista.getElementsByTagName('li');
+            if (elementos.length > 0) {
+                const ultimoElemento = elementos[elementos.length - 1];
+                const texto = ultimoElemento.textContent;
+                lista.removeChild(ultimoElemento);
+                actualizarArbolDOM();
+                logOperacion(`Elemento eliminado de la lista: "${texto}"`);
+            } else {
+                logOperacion('No hay elementos en la lista para eliminar');
+            }
+        }
+        
+        // 5. Crear y eliminar elementos
+        function crearNuevoParrafo() {
+            const texto = document.getElementById('textoNuevoParrafo').value;
+            if (texto) {
+                const areaDinamica = document.getElementById('areaDinamica');
+                const nuevoParrafo = document.createElement('p');
+                nuevoParrafo.textContent = texto;
+                nuevoParrafo.className = 'parrafo-dinamico';
+                areaDinamica.appendChild(nuevoParrafo);
+                actualizarArbolDOM();
+                logOperacion(`Nuevo párrafo creado: "${texto}"`);
+                resaltarElementoNuevo(nuevoParrafo);
+            }
+        }
+        
+        function eliminarUltimoParrafo() {
+            const areaDinamica = document.getElementById('areaDinamica');
+            const parrafos = areaDinamica.getElementsByTagName('p');
+            if (parrafos.length > 0) {
+                const ultimoParrafo = parrafos[parrafos.length - 1];
+                const texto = ultimoParrafo.textContent;
+                areaDinamica.removeChild(ultimoParrafo);
+                actualizarArbolDOM();
+                logOperacion(`Último párrafo eliminado: "${texto}"`);
+            } else {
+                logOperacion('No hay párrafos para eliminar');
+            }
+        }
+        
+        function limpiarAreaDinamica() {
+            const areaDinamica = document.getElementById('areaDinamica');
+            areaDinamica.innerHTML = '<em>Área limpiada. Puedes agregar nuevos elementos.</em>';
+            actualizarArbolDOM();
+            logOperacion('Área dinámica limpiada');
+        }
+        
+        // 6. Navegación y búsqueda
+        function mostrarHijosContenedor() {
+            const contenedor = document.getElementById('contenedorPrincipal');
+            const hijos = contenedor.children;
+            let mensaje = `El contenedor principal tiene ${hijos.length} hijos:\n`;
+            
+            for (let i = 0; i < hijos.length; i++) {
+                mensaje += `- ${hijos[i].tagName}${hijos[i].id ? ` (id: ${hijos[i].id})` : ''}\n`;
+            }
+            
+            logOperacion(mensaje);
+        }
+        
+        function mostrarElementosPorClase() {
+            const elementos = document.getElementsByClassName('texto');
+            let mensaje = `Se encontraron ${elementos.length} elementos con clase "texto":\n`;
+            
+            for (let i = 0; i < elementos.length; i++) {
+                mensaje += `- ${elementos[i].tagName}${elementos[i].id ? ` (id: ${elementos[i].id})` : ''}\n`;
+            }
+            
+            logOperacion(mensaje);
+        }
+        
+        function contarElementosLista() {
+            const lista = document.getElementById('listaElementos');
+            const elementos = lista.getElementsByTagName('li');
+            logOperacion(`La lista tiene ${elementos.length} elementos`);
+        }
+        
+        // ========== FUNCIONES AUXILIARES ==========
+        
+        function logOperacion(mensaje) {
+            const log = document.getElementById('logOperaciones');
+            const logItem = document.createElement('div');
+            logItem.className = 'log-item';
+            logItem.textContent = `[${new Date().toLocaleTimeString()}] ${mensaje}`;
+            log.prepend(logItem);
+            
+            // Limitar el número de elementos en el log
+            if (log.children.length > 10) {
+                log.removeChild(log.lastChild);
+            }
+        }
+        
+        function resaltarElementoEnArbol(id) {
+            const elementos = document.querySelectorAll('.element');
+            elementos.forEach(elemento => {
+                if (elemento.textContent.includes(`id="${id}"`)) {
+                    elemento.classList.add('highlight');
+                }
+            });
+        }
+        
+        function quitarResaltadoEnArbol() {
+            const elementos = document.querySelectorAll('.element');
+            elementos.forEach(elemento => {
+                elemento.classList.remove('highlight');
+            });
+        }
+        
+        function resaltarElementoModificado(id) {
+            const elementos = document.querySelectorAll('.element');
+            elementos.forEach(elemento => {
+                if (elemento.textContent.includes(`id="${id}"`)) {
+                    elemento.classList.add('modified');
+                    setTimeout(() => {
+                        elemento.classList.remove('modified');
+                    }, 2000);
+                }
+            });
+        }
+        
+        function resaltarElementoModificadoPorElemento(elementoDOM) {
+            const id = elementoDOM.id;
+            if (id) {
+                resaltarElementoModificado(id);
+            }
+        }
+        
+        function resaltarElementoNuevo(elementoDOM) {
+            // Esta función se llamaría después de actualizar el árbol DOM
+            // para resaltar el nuevo elemento
+            setTimeout(() => {
+                const id = elementoDOM.id;
+                if (id) {
+                    const elementos = document.querySelectorAll('.element');
+                    elementos.forEach(elemento => {
+                        if (elemento.textContent.includes(`id="${id}"`)) {
+                            elemento.classList.add('new');
+                            setTimeout(() => {
+                                elemento.classList.remove('new');
+                            }, 3000);
+                        }
+                    });
+                }
+            }, 100);
+        }
+        
+        function actualizarArbolDOM() {
+            // En una implementación real, aquí se regeneraría la representación visual del árbol DOM
+            // Para esta demo, simplemente simulamos la actualización
+            logOperacion('Árbol DOM actualizado visualmente');
+        }
+    </script>
+</body>
+</html>
