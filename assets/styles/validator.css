@@ -1,0 +1,19 @@
+.danger {
+    border-color: red
+}
+
+.ok {
+    border-color: green
+}
+
+.textok {
+    color: green;
+}
+
+.textdanger {
+    color: red;
+}
+
+.borrar {
+    display: none;
+}
